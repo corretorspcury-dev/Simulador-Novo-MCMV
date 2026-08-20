@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Imóveis Novos SP - MCMV & HIS/HMP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-4 shadow-lg mb-8">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-3xl font-extrabold md:text-4xl tracking-tight mb-2 flex items-center justify-center gap-2">
+        <i data-lucide="building-2" class="w-8 h-8 text-emerald-400"></i>
+        Simulador Imóveis Novos — São Paulo/SP
+      </h1>
+      <p class="text-blue-100 text-sm md:text-base">
+        Cálculo de Financiamento Caixa, Subsídio MCMV, Cota de Entrada e Enquadramento HIS/HMP
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+      
+      <!-- Painel de Entrada de Dados -->
+      <section class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i data-lucide="calculator" class="w-5 h-5 text-blue-600"></i>
+          Dados da Simulação
+        </h2>
+
+        <form id="simulador-form" onsubmit="event.preventDefault(); calcular();" class="space-y-4">
+          
+          <div>
+            <label for="valorImovel" class="block text-sm font-semibold text-slate-700 mb-1">
+              Valor do Imóvel Novo (R$)
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-400 font-medium">R$</span>
+              <input 
+                type="number" 
+                id="valorImovel" 
+                placeholder="Ex: 250000" 
+                step="1000" 
+                required
+                class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-slate-900 font-semibold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="renda" class="block text-sm font-semibold text-slate-700 mb-1">
+              Renda Familiar Mensal Bruta (R$)
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-400 font-medium">R$</span>
+              <input 
+                type="number" 
+                id="renda" 
+                placeholder="Ex: 3500" 
+                step="50" 
+                required
+                class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-slate-900 font-semibold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="idade" class="block text-sm font-semibold text-slate-700 mb-1">
+              Idade do Comprador
+            </label>
+            <input 
+              type="number" 
+              id="idade" 
+              placeholder="Ex: 32" 
+              min="18" 
+              max="80"
+              required
+              class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-slate-900 font-semibold"
+            />
+          </div>
+
+          <div>
+            <label for="sistema" class="block text-sm font-semibold text-slate-700 mb-1">
+              Tabela de Amortização
+            </label>
+            <select id="sistema" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-slate-800">
+              <option value="PRICE">Tabela PRICE (Prestação Fixa)</option>
+              <option value="SAC">Tabela SAC (Prestação Decrescente)</option>
+            </select>
+          </div>
+
+          <button 
+            type="submit" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 mt-2">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            Simular Financiamento SP
+          </button>
+        </form>
+      </section>
+
+      <!-- Painel de Resultados -->
+      <section class="md:col-span-7 space-y-6">
+        
+        <!-- Enquadramento -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i data-lucide="layers" class="w-5 h-5 text-emerald-600"></i>
+            Enquadramento no Município de SP
+          </h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+              <span class="text-xs uppercase font-bold text-emerald-700 tracking-wider">Minha Casa, Minha Vida</span>
+              <div id="res-mcmv" class="text-xl font-extrabold text-emerald-900 mt-1">
+                Aguardando dados...
+              </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+              <span class="text-xs uppercase font-bold text-blue-700 tracking-wider">Legislação Urbana SP</span>
+              <div id="res-his" class="text-xl font-extrabold text-blue-900 mt-1">
+                Aguardando dados...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estimativas Financiamento -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i data-lucide="trending-up" class="w-5 h-5 text-blue-600"></i>
+            Resumo Financeiro da Operação
+          </h2>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">Valor Avaliação Imóvel:</span>
+              <span id="res-valor-imovel" class="font-bold text-slate-800">-</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">Prazo de Financiamento:</span>
+              <span id="res-prazo" class="font-bold text-slate-800">-</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">Taxa de Juros Anual:</span>
+              <span id="res-juros" class="font-bold text-slate-800">-</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">1ª Parcela Estimada:</span>
+              <span id="res-parcela" class="font-bold text-slate-800">-</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">Subsídio MCMV Estimado:</span>
+              <span id="res-subsidio" class="font-bold text-emerald-600">-</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+              <span class="text-slate-600">Financiamento Caixa (Máx. 80%):</span>
+              <span id="res-financiamento" class="font-bold text-blue-700">-</span>
+            </div>
+
+            <!-- Destaque para Entrada -->
+            <div class="flex justify-between items-center py-3 bg-amber-50 border border-amber-200 px-4 rounded-xl mt-2">
+              <span class="text-amber-900 font-bold">Entrada Mínima Necessária:</span>
+              <span id="res-entrada" class="text-2xl font-extrabold text-amber-700">R$ 0,00</span>
+            </div>
+          </div>
+
+          <div id="alerta-teto" class="text-xs text-red-700 bg-red-50 border border-red-200 p-3 rounded-lg mt-4 hidden">
+            <strong>Atenção:</strong> O valor digitado para o imóvel excede o teto permitido para a sua faixa do MCMV em São Paulo.
+          </div>
+
+          <div id="aviso-idade" class="text-xs text-amber-800 bg-amber-50 p-3 rounded-lg mt-2 hidden">
+            <strong>Regra de Idade:</strong> O prazo foi ajustado para respeitar a regra Caixa (Idade + Prazo ≤ 80,5 anos).
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    function formatarMoeda(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function calcular() {
+      const valorImovel = parseFloat(document.getElementById('valorImovel').value);
+      const renda = parseFloat(document.getElementById('renda').value);
+      const idade = parseInt(document.getElementById('idade').value);
+      const sistema = document.getElementById('sistema').value;
+
+      if (!valorImovel || !renda || !idade || valorImovel <= 0 || renda <= 0 || idade < 18) return;
+
+      // 1. Limite de Prazo pela Idade (Idade + Prazo <= 80 anos e 6 meses)
+      const idadeEmMeses = idade * 12;
+      const limiteMesesCaixa = 966 - idadeEmMeses;
+      let prazoMeses = Math.min(420, limiteMesesCaixa);
+
+      if (prazoMeses < 12) {
+        alert("A idade excede o limite permitido para financiamento habitacional.");
+        return;
+      }
+
+      const avisoIdade = document.getElementById('aviso-idade');
+      if (prazoMeses < 420) {
+        avisoIdade.classList.remove('hidden');
+      } else {
+        avisoIdade.classList.add('hidden');
+      }
+
+      // 2. Seguro MIP por Faixa Etária
+      let taxaMIPAnual = 0.0002;
+      if (idade >= 31 && idade <= 40) taxaMIPAnual = 0.00035;
+      else if (idade >= 41 && idade <= 50) taxaMIPAnual = 0.00075;
+      else if (idade >= 51 && idade <= 60) taxaMIPAnual = 0.00180;
+      else if (idade > 60) taxaMIPAnual = 0.00450;
+
+      // 3. Faixas MCMV / HIS para São Paulo/SP e cálculo de subsídio
+      let mcmvFaixa = "";
+      let hisFaixa = "";
+      let taxaJuros = 0;
+      let subsidio = 0;
+      let tetoMCMV = 0;
+
+      if (renda <= 3200) {
+        mcmvFaixa = "Faixa 1";
+        hisFaixa = "HIS 1";
+        taxaJuros = 4.33;
+        tetoMCMV = 264000;
+        
+        if (renda <= 1800) {
+          subsidio = 55000;
+        } else if (renda <= 2600) {
+          subsidio = 55000 - ((renda - 1800) * 0.046);
+        } else {
+          subsidio = 18000 - ((renda - 2600) * 0.02);
+        }
+      } else if (renda <= 5000) {
+        mcmvFaixa = "Faixa 2";
+        hisFaixa = "HIS 2";
+        taxaJuros = renda <= 4000 ? 5.64 : 6.69;
+        tetoMCMV = 264000;
+        subsidio = Math.max(2099 - ((renda - 4000) * 0.002), 0);
+      } else if (renda <= 9600) {
+        mcmvFaixa = "Faixa 3";
+        hisFaixa = "HIS 2";
+        taxaJuros = 8.16;
+        tetoMCMV = 400000;
+        subsidio = 0;
+      } else if (renda <= 13000) {
+        mcmvFaixa = "Faixa 4 (Classe Média)";
+        hisFaixa = "HMP";
+        taxaJuros = 10.47;
+        tetoMCMV = 600000;
+        subsidio = 0;
+      } else {
+        mcmvFaixa = "Fora do MCMV";
+        hisFaixa = "HMP / SBPE";
+        taxaJuros = 10.76;
+        tetoMCMV = 750000;
+        subsidio = 0;
+      }
+
+      if (subsidio < 0) subsidio = 0;
+
+      // Alerta de Teto
+      const alertaTeto = document.getElementById('alerta-teto');
+      if (valorImovel > tetoMCMV) {
+        alertaTeto.classList.remove('hidden');
+      } else {
+        alertaTeto.classList.add('hidden');
+      }
+
+      // 4. Parcela Máxima (30% Renda)
+      const parcelaMax = renda * 0.30;
+
+      // 5. Cálculo do Potencial de Financiamento Pela Renda
+      const iJurosMensal = (Math.pow(1 + (taxaJuros / 100), 1/12) - 1);
+      const iSeguroMensal = taxaMIPAnual / 12;
+      const iTotalMensal = iJurosMensal + iSeguroMensal;
+      const tarifaFixa = 25.00;
+
+      const parcelaDisponivel = Math.max(parcelaMax - tarifaFixa, 0);
+
+      let capacidadeFinanciamento = 0;
+      if (sistema === 'PRICE') {
+        capacidadeFinanciamento = parcelaDisponivel * ((Math.pow(1 + iTotalMensal, prazoMeses) - 1) / (iTotalMensal * Math.pow(1 + iTotalMensal, prazoMeses)));
+      } else {
+        capacidadeFinanciamento = parcelaDisponivel / ((1 / prazoMeses) + iTotalMensal);
+      }
+
+      // 6. Cota Máxima de Financiamento Caixa (Máximo de 80% do valor do imóvel)
+      const cotaMaximaCaixa = valorImovel * 0.80;
+      const financiamentoAprovado = Math.min(capacidadeFinanciamento, cotaMaximaCaixa);
+
+      // 7. Cálculo da Entrada Mínima Necessária
+      let entradaNecessaria = valorImovel - financiamentoAprovado - subsidio;
+      if (entradaNecessaria < 0) entradaNecessaria = 0;
+
+      // Renderização
+      document.getElementById('res-mcmv').innerText = mcmvFaixa;
+      document.getElementById('res-his').innerText = hisFaixa;
+      document.getElementById('res-valor-imovel').innerText = formatarMoeda(valorImovel);
+      document.getElementById('res-prazo').innerText = `${prazoMeses} meses (${(prazoMeses/12).toFixed(1)} anos)`;
+      document.getElementById('res-juros').innerText = `${taxaJuros.toFixed(2)}% a.a.`;
+      document.getElementById('res-parcela').innerText = formatarMoeda(parcelaMax);
+      document.getElementById('res-subsidio').innerText = formatarMoeda(subsidio);
+      document.getElementById('res-financiamento').innerText = formatarMoeda(financiamentoAprovado);
+      document.getElementById('res-entrada').innerText = formatarMoeda(entradaNecessaria);
+    }
+  </script>
+</body>
+</html>
