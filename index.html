@@ -78,12 +78,27 @@
             <input 
               type="number" 
               id="idade" 
-              placeholder="Ex: 32" 
+              placeholder="Ex: 33 (ref 31/12/1990)" 
               min="18" 
               max="80"
               required
               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-slate-900 font-semibold"
             />
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="possuiRedutor" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+              <label for="possuiRedutor" class="text-sm font-medium text-slate-700">
+                Possui direito ao Redutor / Conta Vinculada (3 anos de FGTS)
+              </label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="possuiDependente" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+              <label for="possuiDependente" class="text-sm font-medium text-slate-700">
+                Possui dependente (para cálculo de subsídio)
+              </label>
+            </div>
           </div>
 
           <div>
@@ -166,7 +181,7 @@
             </div>
 
             <div class="flex justify-between items-center py-2 border-b border-slate-100">
-              <span class="text-slate-600">Financiamento Caixa (Máx. 80%):</span>
+              <span class="text-slate-600">Financiamento Máximo (Conforme Tabela):</span>
               <span id="res-financiamento" class="font-bold text-blue-700">-</span>
             </div>
 
@@ -178,7 +193,7 @@
           </div>
 
           <div id="alerta-teto" class="text-xs text-red-700 bg-red-50 border border-red-200 p-3 rounded-lg mt-4 hidden">
-            <strong>Atenção:</strong> O valor digitado para o imóvel excede o teto permitido para a sua faixa do MCMV em São Paulo.
+            <strong>Atenção:</strong> O valor digitado para o imóvel excede o teto permitido para a sua faixa do MCMV.
           </div>
 
           <div id="aviso-idade" class="text-xs text-amber-800 bg-amber-50 p-3 rounded-lg mt-2 hidden">
@@ -197,11 +212,99 @@
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    // Tabela exata linha a linha extraída do PDF com enquadramento de Faixa correto
+    const tabelaCredilar = [
+      { renda: 1000, finNominal: 56132.57, finRedutor: 59840.81, taxNom: 4.75, taxRed: 4.25, subDep: 55000, subSemDep: 16500, faixa: "Faixa 1" },
+      { renda: 1200, finNominal: 68140.82, finRedutor: 72642.35, taxNom: 4.75, taxRed: 4.25, subDep: 55000, subSemDep: 16500, faixa: "Faixa 1" },
+      { renda: 1400, finNominal: 80149.07, finRedutor: 85443.89, taxNom: 4.75, taxRed: 4.25, subDep: 55000, subSemDep: 16500, faixa: "Faixa 1" },
+      { renda: 1600, finNominal: 92798.32, finRedutor: 98962.97, taxNom: 4.75, taxRed: 4.25, subDep: 55000, subSemDep: 16500, faixa: "Faixa 1" },
+      { renda: 1800, finNominal: 104165.58, finRedutor: 111046.98, taxNom: 4.75, taxRed: 4.25, subDep: 55000, subSemDep: 16500, faixa: "Faixa 1" },
+      { renda: 2000, finNominal: 116173.83, finRedutor: 123848.52, taxNom: 4.75, taxRed: 4.25, subDep: 50089, subSemDep: 15233, faixa: "Faixa 1" },
+      { renda: 2200, finNominal: 124245.59, finRedutor: 132313.01, taxNom: 5.00, taxRed: 4.50, subDep: 38993, subSemDep: 11868, faixa: "Faixa 2" },
+      { renda: 2400, finNominal: 135885.06, finRedutor: 144708.25, taxNom: 5.00, taxRed: 4.50, subDep: 29260, subSemDep: 8920, faixa: "Faixa 2" },
+      { renda: 2600, finNominal: 147524.54, finRedutor: 157103.49, taxNom: 5.00, taxRed: 4.50, subDep: 21157, subSemDep: 6461, faixa: "Faixa 2" },
+      { renda: 2800, finNominal: 159164.02, finRedutor: 169498.73, taxNom: 5.00, taxRed: 4.50, subDep: 14603, subSemDep: 4467, faixa: "Faixa 2" },
+      { renda: 3000, finNominal: 160940.88, finRedutor: 171211.65, taxNom: 5.25, taxRed: 4.75, subDep: 9621, subSemDep: 2945, faixa: "Faixa 2" },
+      { renda: 3200, finNominal: 172228.77, finRedutor: 183219.90, taxNom: 5.25, taxRed: 4.75, subDep: 5880, subSemDep: 1803, faixa: "Faixa 2" },
+      { renda: 3400, finNominal: 178065.26, finRedutor: 189232.66, taxNom: 5.50, taxRed: 5.00, subDep: 3492, subSemDep: 1071, faixa: "Faixa 2" },
+      { renda: 3600, finNominal: 178225.19, finRedutor: 189017.84, taxNom: 6.00, taxRed: 5.50, subDep: 2333, subSemDep: 715, faixa: "Faixa 2" },
+      { renda: 3800, finNominal: 192129.97, finRedutor: 199970.42, taxNom: 6.00, taxRed: 5.50, subDep: 2142, subSemDep: 657, faixa: "Faixa 2" },
+      { renda: 4000, finNominal: 198879.60, finRedutor: 210923.01, taxNom: 6.00, taxRed: 5.50, subDep: 2099, subSemDep: 644, faixa: "Faixa 2" },
+      { renda: 4200, finNominal: 187094.40, finRedutor: 197652.27, taxNom: 7.00, taxRed: 6.50, subDep: 0, subSemDep: 0, faixa: "Faixa 2" },
+      { renda: 4400, finNominal: 196330.05, finRedutor: 207409.11, taxNom: 7.00, taxRed: 6.50, subDep: 0, subSemDep: 0, faixa: "Faixa 2" },
+      { renda: 4700, finNominal: 210183.54, finRedutor: 220000.00, taxNom: 7.00, taxRed: 6.50, subDep: 0, subSemDep: 0, faixa: "Faixa 2" },
+      { renda: 5000, finNominal: 220000.00, finRedutor: 220000.00, taxNom: 7.00, taxRed: 6.50, subDep: 0, subSemDep: 0, faixa: "Faixa 2" },
+      { renda: 5200, finNominal: 202128.80, finRedutor: 212636.86, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 5400, finNominal: 210317.57, finRedutor: 221251.33, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 5600, finNominal: 218506.34, finRedutor: 229865.81, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 5800, finNominal: 226695.10, finRedutor: 238480.29, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 6000, finNominal: 234883.87, finRedutor: 247094.76, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 6200, finNominal: 243072.64, finRedutor: 255709.24, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 6400, finNominal: 251261.41, finRedutor: 264323.72, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 6600, finNominal: 264363.62, finRedutor: 278158.95, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 6800, finNominal: 267638.94, finRedutor: 281552.67, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 7000, finNominal: 275827.71, finRedutor: 290167.14, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 7200, finNominal: 284016.48, finRedutor: 298781.62, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 7400, finNominal: 292205.24, finRedutor: 307396.10, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 7600, finNominal: 300394.01, finRedutor: 316010.57, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 7800, finNominal: 308582.78, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 8000, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 8200, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 8400, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 8600, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 8800, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 9000, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 9200, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 9400, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 9600, finNominal: 320000.00, finRedutor: 320000.00, taxNom: 8.16, taxRed: 7.66, subDep: 0, subSemDep: 0, faixa: "Faixa 3" },
+      { renda: 9800, finNominal: 325572.79, finRedutor: 325572.79, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 10000, finNominal: 332465.60, finRedutor: 335017.14, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 10200, finNominal: 339358.41, finRedutor: 339358.41, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 10400, finNominal: 346251.22, finRedutor: 346251.22, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 10600, finNominal: 353144.04, finRedutor: 353144.04, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 10800, finNominal: 360036.85, finRedutor: 360036.85, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 11000, finNominal: 366929.66, finRedutor: 366929.66, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 11200, finNominal: 373822.47, finRedutor: 373822.47, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 11400, finNominal: 380715.29, finRedutor: 380715.29, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 11600, finNominal: 387608.10, finRedutor: 387608.10, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 11800, finNominal: 394500.91, finRedutor: 394500.91, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 12000, finNominal: 401393.72, finRedutor: 401393.72, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 12500, finNominal: 418625.75, finRedutor: 418625.75, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" },
+      { renda: 13000, finNominal: 435857.78, finRedutor: 435857.78, taxNom: 10.00, taxRed: 10.00, subDep: 0, subSemDep: 0, faixa: "Faixa 4" }
+    ];
+
+    function interpolarLinha(renda) {
+      if (renda <= tabelaCredilar[0].renda) return tabelaCredilar[0];
+      if (renda >= tabelaCredilar[tabelaCredilar.length - 1].renda) return tabelaCredilar[tabelaCredilar.length - 1];
+
+      for (let i = 0; i < tabelaCredilar.length - 1; i++) {
+        const atual = tabelaCredilar[i];
+        const proximo = tabelaCredilar[i + 1];
+
+        if (renda >= atual.renda && renda <= proximo.renda) {
+          const fator = (renda - atual.renda) / (proximo.renda - atual.renda);
+          return {
+            renda: renda,
+            finNominal: atual.finNominal + fator * (proximo.finNominal - atual.finNominal),
+            finRedutor: atual.finRedutor + fator * (proximo.finRedutor - atual.finRedutor),
+            taxNom: atual.taxNom,
+            taxRed: atual.taxRed,
+            subDep: atual.subDep + fator * (proximo.subDep - atual.subDep),
+            subSemDep: atual.subSemDep + fator * (proximo.subSemDep - atual.subSemDep),
+            faixa: atual.faixa
+          };
+        }
+      }
+      return tabelaCredilar[tabelaCredilar.length - 1];
+    }
+
     function calcular() {
       const valorImovel = parseFloat(document.getElementById('valorImovel').value);
       const renda = parseFloat(document.getElementById('renda').value);
       const idade = parseInt(document.getElementById('idade').value);
       const sistema = document.getElementById('sistema').value;
+      const possuiRedutor = document.getElementById('possuiRedutor').checked;
+      const possuiDependente = document.getElementById('possuiDependente').checked;
 
       if (!valorImovel || !renda || !idade || valorImovel <= 0 || renda <= 0 || idade < 18) return;
 
@@ -222,62 +325,44 @@
         avisoIdade.classList.add('hidden');
       }
 
-      // 2. Seguro MIP por Faixa Etária
-      let taxaMIPAnual = 0.0002;
-      if (idade >= 31 && idade <= 40) taxaMIPAnual = 0.00035;
-      else if (idade >= 41 && idade <= 50) taxaMIPAnual = 0.00075;
-      else if (idade >= 51 && idade <= 60) taxaMIPAnual = 0.00180;
-      else if (idade > 60) taxaMIPAnual = 0.00450;
+      // Linha correspondente extraída da Tabela
+      const dadosTabela = interpolarLinha(renda);
 
-      // 3. Faixas MCMV / HIS para São Paulo/SP e cálculo de subsídio
-      let mcmvFaixa = "";
+      let mcmvFaixa = dadosTabela.faixa;
       let hisFaixa = "";
-      let taxaJuros = 0;
-      let subsidio = 0;
       let tetoMCMV = 0;
 
-      if (renda <= 3200) {
-        mcmvFaixa = "Faixa 1";
-        hisFaixa = "HIS 1";
-        taxaJuros = 4.33;
-        tetoMCMV = 264000;
-        
-        if (renda <= 1800) {
-          subsidio = 55000;
-        } else if (renda <= 2600) {
-          subsidio = 55000 - ((renda - 1800) * 0.046);
-        } else {
-          subsidio = 18000 - ((renda - 2600) * 0.02);
-        }
-      } else if (renda <= 5000) {
-        mcmvFaixa = "Faixa 2";
-        hisFaixa = "HIS 2";
-        taxaJuros = renda <= 4000 ? 5.64 : 6.69;
-        tetoMCMV = 264000;
-        subsidio = Math.max(2099 - ((renda - 4000) * 0.002), 0);
-      } else if (renda <= 9600) {
-        mcmvFaixa = "Faixa 3";
-        hisFaixa = "HIS 2";
-        taxaJuros = 8.16;
+      if (mcmvFaixa === "Faixa 1" || mcmvFaixa === "Faixa 2") {
+        hisFaixa = renda <= 2000 ? "HIS 1" : "HIS 2";
+        tetoMCMV = 275000;
+      } else if (mcmvFaixa === "Faixa 3") {
+        hisFaixa = "HIS 2 / HMP";
         tetoMCMV = 400000;
-        subsidio = 0;
-      } else if (renda <= 13000) {
-        mcmvFaixa = "Faixa 4 (Classe Média)";
+      } else if (mcmvFaixa === "Faixa 4") {
         hisFaixa = "HMP";
-        taxaJuros = 10.47;
         tetoMCMV = 600000;
-        subsidio = 0;
       } else {
         mcmvFaixa = "Fora do MCMV";
         hisFaixa = "HMP / SBPE";
-        taxaJuros = 10.76;
         tetoMCMV = 750000;
-        subsidio = 0;
       }
 
-      if (subsidio < 0) subsidio = 0;
+      const taxaJuros = possuiRedutor ? dadosTabela.taxRed : dadosTabela.taxNom;
+      const subsidio = possuiDependente ? dadosTabela.subDep : dadosTabela.subSemDep;
 
-      // Alerta de Teto
+      // Capacidade de Financiamento baseada estritamente no PDF
+      let financiamentoTabela = possuiRedutor ? dadosTabela.finRedutor : dadosTabela.finNominal;
+
+      // Redução proporcional caso o prazo do cliente seja menor por idade
+      if (prazoMeses < 420) {
+        financiamentoTabela = financiamentoTabela * (prazoMeses / 420);
+      }
+
+      // Limite do financiamento de até 80% do valor do imóvel
+      const cotaMaximaCaixa = valorImovel * 0.80;
+      const financiamentoAprovado = Math.min(financiamentoTabela, cotaMaximaCaixa);
+
+      // Alerta de Teto da Faixa
       const alertaTeto = document.getElementById('alerta-teto');
       if (valorImovel > tetoMCMV) {
         alertaTeto.classList.remove('hidden');
@@ -285,38 +370,19 @@
         alertaTeto.classList.add('hidden');
       }
 
-      // 4. Parcela Máxima (30% Renda)
+      // Parcela estimada (30% da renda bruta)
       const parcelaMax = renda * 0.30;
 
-      // 5. Cálculo do Potencial de Financiamento Pela Renda
-      const iJurosMensal = (Math.pow(1 + (taxaJuros / 100), 1/12) - 1);
-      const iSeguroMensal = taxaMIPAnual / 12;
-      const iTotalMensal = iJurosMensal + iSeguroMensal;
-      const tarifaFixa = 25.00;
-
-      const parcelaDisponivel = Math.max(parcelaMax - tarifaFixa, 0);
-
-      let capacidadeFinanciamento = 0;
-      if (sistema === 'PRICE') {
-        capacidadeFinanciamento = parcelaDisponivel * ((Math.pow(1 + iTotalMensal, prazoMeses) - 1) / (iTotalMensal * Math.pow(1 + iTotalMensal, prazoMeses)));
-      } else {
-        capacidadeFinanciamento = parcelaDisponivel / ((1 / prazoMeses) + iTotalMensal);
-      }
-
-      // 6. Cota Máxima de Financiamento Caixa (Máximo de 80% do valor do imóvel)
-      const cotaMaximaCaixa = valorImovel * 0.80;
-      const financiamentoAprovado = Math.min(capacidadeFinanciamento, cotaMaximaCaixa);
-
-      // 7. Cálculo da Entrada Mínima Necessária
+      // Cálculo da Entrada Mínima Necessária
       let entradaNecessaria = valorImovel - financiamentoAprovado - subsidio;
       if (entradaNecessaria < 0) entradaNecessaria = 0;
 
-      // Renderização
+      // Exibição nos campos
       document.getElementById('res-mcmv').innerText = mcmvFaixa;
       document.getElementById('res-his').innerText = hisFaixa;
       document.getElementById('res-valor-imovel').innerText = formatarMoeda(valorImovel);
       document.getElementById('res-prazo').innerText = `${prazoMeses} meses (${(prazoMeses/12).toFixed(1)} anos)`;
-      document.getElementById('res-juros').innerText = `${taxaJuros.toFixed(2)}% a.a.`;
+      document.getElementById('res-juros').innerText = `${taxaJuros.toFixed(2)}% a.a. ${possuiRedutor ? '(C/ Redutor)' : ''}`;
       document.getElementById('res-parcela').innerText = formatarMoeda(parcelaMax);
       document.getElementById('res-subsidio').innerText = formatarMoeda(subsidio);
       document.getElementById('res-financiamento').innerText = formatarMoeda(financiamentoAprovado);
